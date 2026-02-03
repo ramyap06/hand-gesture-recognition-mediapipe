@@ -19,8 +19,7 @@ from model import PointHistoryClassifier
 
 
 # ---------------------------------------------------------------------
-# MediaPipe Tasks -> "Solutions-like" compatibility adapters
-# (Keeps your existing calc_* and draw_info_text code unchanged.)
+# MediaPipe Tasks -> converting Solutions to Tasks library
 # ---------------------------------------------------------------------
 class _FakeLandmark:
     def __init__(self, x: float, y: float, z: float = 0.0):
@@ -114,7 +113,7 @@ def main():
     options = vision.HandLandmarkerOptions(
         base_options=base_options,
         running_mode=running_mode,
-        num_hands=1,
+        num_hands=2,
         min_hand_detection_confidence=float(min_detection_confidence),
         min_tracking_confidence=float(min_tracking_confidence),
     )
@@ -150,7 +149,7 @@ def main():
 
             # Process Key (ESC: end) #########################################
             key = cv.waitKey(10)
-            if key == 27:  # ESC
+            if key == 27: # ESC
                 break
             number, mode = select_mode(key, mode)
 
@@ -214,6 +213,11 @@ def main():
                     #finger_gesture_history.append(finger_gesture_id)
                     most_common_fg_id = Counter(finger_gesture_history).most_common()
 
+                    # Check if figure id is empty since finger tracking is not being used
+                    fg_label = ""
+                    if most_common_fg_id:
+                        fg_label = point_history_classifier_labels[most_common_fg_id[0][0]]
+                    
                     # Drawing part
                     debug_image = draw_bounding_rect(use_brect, debug_image, brect)
                     debug_image = draw_landmarks(debug_image, landmark_list)
@@ -222,7 +226,7 @@ def main():
                         brect,
                         handedness,
                         keypoint_classifier_labels[hand_sign_id],
-                        point_history_classifier_labels[most_common_fg_id[0][0]],
+                        fg_label,
                     )
             else:
                 point_history.append([0, 0])
